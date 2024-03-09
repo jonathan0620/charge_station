@@ -333,67 +333,104 @@ h4 {
         var userLat = 37.547733817408;
         var userLon = 127.08016373868;
 
-        // page 로딩 시 시작
+     // 페이지 로딩시 시작 데이터 불러오기 및 표시 (마커찍기&사용자마커찍기)
         $.ajax({
-            url: "select2",
+            url: "mapfind",
             success: function (response) {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        function (position) {
-                            userLat = position.coords.latitude; // 위도
-                            userLon = position.coords.longitude; // 경도
+                var markers = [];
 
-                            // 사용자 위치에 마커 찍기
-                            var userMarker = new kakao.maps.Marker({
-                                position: new kakao.maps.LatLng(userLat, userLon),
-                                image: markerimageUser
-                            });
-
-                            // 페이지 이동
-                            map.panTo(new kakao.maps.LatLng(userLat, userLon));
-
-                            // 지도에 마커 추가
-                            userMarker.setMap(map);
-                            
-                            // 마커 클릭 이벤트
-                            kakao.maps.event.addListener(userMarker, 'click', function () {
-                                apiDetailRequest(es_statId);
-                                $('#chargeDetailModal').modal('show');
-                            });
-
-                            // 마커에 마우스오버 이벤트
-                            kakao.maps.event.addListener(userMarker, 'mouseover', function () {
-                                infowindow.open(map, userMarker);
-                            });
-
-                            // 마커에 마우스아웃 이벤트
-                            kakao.maps.event.addListener(userMarker, 'mouseout', function () {
-                                infowindow.close();
-                            });
-
-                        },
-                        function (error) {
-                            // 위치를 가져오는 데 문제가 있는 경우
-                            console.error(`위치 정보를 가져오는 데 실패했습니다. 오류: ${error.message}`);
-
-                            // 사용자 위치에 마커 찍기
-                            var userMarker = new kakao.maps.Marker({
-                                position: new kakao.maps.LatLng(userLat, userLon),
-                                image: markerimageUser
-                            });
-
-                            // 페이지 이동
-                            map.panTo(new kakao.maps.LatLng(userLat, userLon));
-
-                            // 지도에 마커 추가
-                            userMarker.setMap(map);
+                $(response).each(function (i, json) {
+                    if (json.stat == "2") {
+                        var marker = new kakao.maps.Marker({
+                            position: new kakao.maps.LatLng(json.es_lat, json.es_lon),
+                            image: markerImageSucc
                         });
-                } else {
-                   
-                    console.error('브라우저에서 Geolocation API를 지원하지 않습니다.');
-                }
+                    } else {
+                        var marker = new kakao.maps.Marker({
+                            position: new kakao.maps.LatLng(json.es_lat, json.es_lon),
+                            image: markerImageFail
+                        });
+                    }
+
+                    markers.push(marker);
+
+                    // 마커에 인포윈도우 추가
+                    var iwContent = '<div style="padding:5px;">' + json.es_statNm + '</div>';
+                    var infowindow = new kakao.maps.InfoWindow({
+                        content: iwContent
+                    });
+
+                    // 마커에 마우스오버 이벤트
+                    kakao.maps.event.addListener(marker, 'mouseover', function () {
+                        infowindow.open(map, marker);
+                        
+                    });
+
+                    // 마커에 마우스아웃 이벤트
+                    kakao.maps.event.addListener(marker, 'mouseout', function () {
+                        infowindow.close();
+                    });
+
+                    // 마커 클릭 이벤트
+                    kakao.maps.event.addListener(marker, 'click', function () {
+                        apiDetailRequest(json.es_statId);
+                        $('#chargeDetailModal').modal('show');
+                        console.log(json)
+                    });
+                });
+
+                clusterer.addMarkers(markers);
+
+                kakao.maps.event.addListener(clusterer, 'clusterclick', function (cluster) {
+                    var content = '<div style="padding:5px;">' + cluster.getMarkers()[0].es_statNm + '</div>';
+                    infoWindow.setContent(content);
+                    infoWindow.setPosition(cluster.getCenter());
+                    infoWindow.open(map);
+                });
+            },
+            error: function (error) {
+                console.log("데이터를 불러오는 중 에러 발생: " + error);
             }
         });
+     // 사용자 마커찍기 
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function (position) {
+                    userLat = position.coords.latitude; // 위도
+                    userLon = position.coords.longitude; // 경도
+
+                    // 사용자 위치에 마커 찍기
+                    var userMarker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng(userLat, userLon),
+                        image: markerimageUser
+                    });
+
+                    // 페이지 이동
+                    map.panTo(new kakao.maps.LatLng(userLat, userLon));
+
+                    // 지도에 마커 추가
+                    userMarker.setMap(map);
+                },
+                function (error) {
+                    // 위치를 가져오는 데 문제가 있는 경우
+                    console.error(`위치 정보를 가져오는 데 실패했습니다. 오류: ${error.message}`);
+
+                    // 사용자 위치에 마커 찍기
+                    var userMarker = new kakao.maps.Marker({
+                        position: new kakao.maps.LatLng(userLat, userLon),
+                        image: markerimageUser
+                    });
+
+                    // 페이지 이동
+                    map.panTo(new kakao.maps.LatLng(userLat, userLon));
+
+                    // 지도에 마커 추가
+                    userMarker.setMap(map);
+                });
+        } else {
+            console.error('브라우저에서 Geolocation API를 지원하지 않습니다.');
+        }
+
 
         // 목록 리스트 클릭 함수
         $(document).on('click', '#result-list a', function (event) {
@@ -469,7 +506,7 @@ h4 {
             var keyword = $('#keyword').val();
 
             $.ajax({
-                url: "selectlist2",
+                url: "maplist",
                 data: {
                     es_statNm: keyword,
                 },
@@ -637,63 +674,7 @@ h4 {
             location.href = "MainPage.jsp";
         });
 
-        // 데이터 불러오기 및 표시 // 마커찍기
-        $.ajax({
-            url: "select2",
-            success: function (response) {
-                var markers = [];
-
-                $(response).each(function (i, json) {
-                    if (json.stat == "2") {
-                        var marker = new kakao.maps.Marker({
-                            position: new kakao.maps.LatLng(json.es_lat, json.es_lon),
-                            image: markerImageSucc
-                        });
-                    } else {
-                        var marker = new kakao.maps.Marker({
-                            position: new kakao.maps.LatLng(json.es_lat, json.es_lon),
-                            image: markerImageFail
-                        });
-                    }
-
-                    markers.push(marker);
-
-                    // 마커에 인포윈도우 추가
-                    var iwContent = '<div style="padding:5px;">' + json.es_statNm + '</div>';
-                    var infowindow = new kakao.maps.InfoWindow({
-                        content: iwContent
-                    });
-
-                    // 마커에 마우스오버 이벤트
-                    kakao.maps.event.addListener(marker, 'mouseover', function () {
-                        infowindow.open(map, marker);
-                    });
-
-                    // 마커에 마우스아웃 이벤트
-                    kakao.maps.event.addListener(marker, 'mouseout', function () {
-                        infowindow.close();
-                    });
-
-                    // 마커 클릭 이벤트
-                    kakao.maps.event.addListener(marker, 'click', function () {
-                        apiDetailRequest(json.es_statId);
-                        $('#chargeDetailModal').modal('show');
-                    });
-                });
-
-                clusterer.addMarkers(markers);
-
-                kakao.maps.event.addListener(clusterer, 'clusterclick', function (cluster) {
-                    var content = '<div style="padding:5px;">' + cluster.getMarkers()[0].es_statNm + '</div>';
-                    infoWindow.setContent(content);
-                    infoWindow.setPosition(cluster.getCenter());
-                    infoWindow.open(map);
-                });
-            },
-            error: function (error) {
-                console.log("데이터를 불러오는 중 에러 발생: " + error);
-            }
-        });
+      
         
         // 토글 테스트
         $('#bt-test').click(function() {
@@ -758,7 +739,7 @@ h4 {
                     // 원 추가
                     circle = new kakao.maps.Circle({
                         center: new kakao.maps.LatLng(userLat, userLon),
-                        radius: 500,
+                        radius: 1000,
                         strokeWeight: 5,
                         strokeColor: '#75B8FA',
                         strokeOpacity: 1,
@@ -777,6 +758,7 @@ h4 {
         function apiDetailRequest(es_statId) {
             var modalTitle = $('#chargeDetailModalLabel');
             var modalBody = $('#chargeDetailModalBody');
+           
 
             // modal - title & body content 초기화
             modalTitle.empty();
@@ -784,7 +766,7 @@ h4 {
 
             // api를 통해서 데이터를 가지고 오기 전 로딩화면 먼저 보여주기
             modalTitle.append('<tr><td colspan="6"><span class="spinner-border spinner-border-sm"></span>로딩중</td></tr>')
-
+            
             // 별점
             var chargeAvg;
 
@@ -875,7 +857,7 @@ h4 {
                     modalBody.append('<h3 class="text-center" style="margin-bottom: 10px;"><img src="../resources/img/star.png" width="30" height="30">' + chargeAvg + '</h3>');
 
                     modalBody.append('<h3 style="margin-bottom: 10;"><img src="../resources/img/evcar.png" width="45" height="30"> 실시간 충전기 상황</h3>');
-                    modalBody.append('<table class="table table-bordered" style="border-collapse: collapse; width: 95%; margin-bottom : 10px; background-color: #f2f2f2;">' + '<thead class="thead-dark"><tr><th style="border: 1px solid #ddd;">충전기상태</th><th style="border: 1px solid #ddd;">충전가능</th><th style="border: 1px solid #ddd;">충전중</th></tr></thead>' + '<tbody><tr><td style="border: 1px solid #ddd;">' + chgerType + '</td><td style="border: 1px solid #ddd;">' + statMap.get('2') + '</td><td style="border: 1px solid #ddd;">' + statMap.get('1') + '</td></tr></tbody>' + '</table>' + '<p style="margin-bottom: 10;"><img src="../resources/img/chargetime.png" width="20" height="15"> 이용가능시간 : ' + useTime + '</p>');
+                    modalBody.append('<table class="table table-bordered" style="border-collapse: collapse; width: 95%; margin-bottom : 10px; background-color: #f2f2f2;">' + '<thead class="thead-dark"><tr><th style="border: 1px solid #ddd;">충전기상태</th><th style="border: 1px solid #ddd;">충전가능</th><th style="border: 1px solid #ddd;">충전중</th></tr></thead>' + '<tbody><tr><td style="border: 1px solid #ddd;">' + chgerType + '</td><td style="border: 1px solid #ddd;">' + statMap.get('2') + '</td><td style="border: 1px solid #ddd;">' + statMap.get('3') + '</td></tr></tbody>' + '</table>' + '<p style="margin-bottom: 10;"><img src="../resources/img/chargetime.png" width="20" height="15"> 이용가능시간 : ' + useTime + '</p>');
 
                     modalBody.append('<hr>');
 
