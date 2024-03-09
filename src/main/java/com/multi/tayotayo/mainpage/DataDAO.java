@@ -20,18 +20,26 @@ public class DataDAO {
         }
     }
 
-    public List<JoinVO> select() {
-        return my.selectList("data.select");
+ ///// selectList (찾기 페이지 클릭 시 실행)   
+    
+    public List<JoinVO> mapfind() {
+        return my.selectList("data.mapfind");
     }
 
-    public List<JoinVO> selectlist(String es_statNm) {
-        return my.selectList("data.selectlist", es_statNm);
+///// selectList (검색하기(키워드) 버튼 클릭 시 실행)    
+    
+    public List<JoinVO> maplist(String es_statNm) {
+        return my.selectList("data.maplist", es_statNm);
     }
 
+///// filter (검색하기(필터링) 버튼 클릭 시 실행)    
+    
     public List<JoinVO> filter(JoinVO joinVO) {
         return my.selectList("data.search-filter", joinVO);
     }
 
+///// myLocationFindRecommand (추천하기 버튼 클릭 시 실행)    
+    
     public List<JoinVO> myLocationFindRecommand(JoinVO joinVO) {
         return my.selectList("data.myLocationFindRecommand", joinVO);
     }

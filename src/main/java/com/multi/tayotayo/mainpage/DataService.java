@@ -17,13 +17,20 @@ public class DataService {
          dao.insert(dataVO);
     }
 
-    public List<JoinVO> select() {
-        return dao.select();
+///// select 호출 (찾기 페이지 클릭 시 실행)
+    
+    public List<JoinVO> mapfind() {
+    	
+        return dao.mapfind();
     }
-
-    public List<JoinVO> selectlist(String es_statNm) {
-        return dao.selectlist(es_statNm);
+    
+///// selectlist 호출 (검색하기(키워드) 버튼 클릭 시 실행)
+    
+    public List<JoinVO> maplist(String es_statNm) {
+        return dao.maplist(es_statNm);
     }
+    
+///// filter 호출 (검색하기(키워드) 버튼 클릭 시 실행)
     
     public List<JoinVO> filter(JoinVO joinVO) {
         if (joinVO.getEs_gungoo() == null && joinVO.getEs_faciL() == null && joinVO.getEs_dvcS() == null) {
@@ -43,9 +50,13 @@ public class DataService {
         return list;
     }
 
+///// 공백 또는 null 확인     
+    
     public String emptyToNull(String value) {
         return (value != null && value.equals("")) ? null : value;
     }
+
+///// myLocationFindRecommand 호출 (추천하기 버튼 클릭 시 실행)
 
     public List<JoinVO> myLocationFindRecommand(JoinVO joinVO) {
         return dao.myLocationFindRecommand(joinVO);
