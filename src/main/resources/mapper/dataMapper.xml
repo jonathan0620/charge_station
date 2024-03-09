@@ -8,7 +8,7 @@
         VALUES (#{chgerId}, #{statId}, #{stat})
     </insert>
     
-    <select id="select" resultType="joinVO">
+    <select id="mapfind" resultType="joinVO">
         SELECT *
         FROM 
         (
@@ -19,7 +19,7 @@
         JOIN e_station es ON es.es_statId = s.statId
     </select>
 
-    <select id="selectlist" parameterType="String" resultType="joinVO">
+    <select id="maplist" parameterType="String" resultType="joinVO">
         SELECT *
         FROM 
         (
