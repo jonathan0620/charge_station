@@ -38,13 +38,13 @@ public class DataController {
 
     @GetMapping("/filter")
     @ResponseBody
-    public List<JoinVO> filter(@RequestBody JoinVO joinVO) {
+    public List<JoinVO> filter(JoinVO joinVO) {
         return dataService.filter(joinVO);
     }
 
-    @PostMapping("/myLocationFindRecommand")
+    @GetMapping("/myLocationFindRecommand")
     @ResponseBody
-    public List<JoinVO> myLocationFindRecommand(@RequestBody JoinVO joinVO) {
+    public List<JoinVO> myLocationFindRecommand(JoinVO joinVO) {
        return dataService.myLocationFindRecommand(joinVO);
     }
 }
